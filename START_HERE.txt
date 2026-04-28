@@ -1,0 +1,144 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║         PUBLIC SECTOR HYBRID AI DEMO – START HERE                         ║
+║         Powered by Intel Copilot+ PC & Foundry Local                      ║
+║         On-Device + Cloud Hybrid Architecture                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+WELCOME! This demo showcases hybrid on-device + cloud AI for public sector
+agencies, running on the Intel NPU. Sensitive data stays on-device. Complex
+analysis routes to the cloud — only after sanitization.
+
+
+════════════════════════════════════════════════════════════════════════════════
+FIRST TIME SETUP
+════════════════════════════════════════════════════════════════════════════════
+
+  1. Double-click: Setup.bat  (or run .\Setup.ps1 in PowerShell)
+  2. Wait for dependencies to install (~1-2 minutes)
+  3. Double-click: StartApp.bat
+  4. App opens in your browser at http://localhost:5000
+
+  NOTE: For Intel Copilot+ PCs, NPU acceleration is automatic.
+  Download ARM64 Python from https://python.org if on Snapdragon.
+
+
+════════════════════════════════════════════════════════════════════════════════
+RETURNING USER
+════════════════════════════════════════════════════════════════════════════════
+
+  1. Double-click: StartApp.bat
+  2. App opens in your browser
+  3. Done!
+
+
+════════════════════════════════════════════════════════════════════════════════
+CLOUD HYBRID (OPTIONAL)
+════════════════════════════════════════════════════════════════════════════════
+
+  The app works fully local without any cloud configuration.
+  To enable hybrid cloud routing, set environment variables:
+
+    $env:AZURE_OPENAI_ENDPOINT = "https://your-resource.openai.azure.com"
+    $env:AZURE_OPENAI_KEY = "your-api-key"
+    $env:AZURE_OPENAI_DEPLOYMENT = "your-deployment-name"
+
+  Then restart the app. The header will show "Cloud Ready" when connected.
+  Requests without PII can route to Azure OpenAI for deeper analysis.
+
+
+════════════════════════════════════════════════════════════════════════════════
+DEMO FEATURES (6 Tabs)
+════════════════════════════════════════════════════════════════════════════════
+
+  TAB 1 – HOME
+  • Overview of hybrid AI architecture for public sector
+  • Value props: privacy-first, offline, Intel NPU, cost efficiency
+
+  TAB 2 – COUNTER SERVICE COPILOT
+  • Citizen inquiry handling for front desk / call center
+  • Real-time PII detection (SSN, phone, email, addresses)
+  • Toggle: "Mark Sensitive" forces local processing
+  • Quick prompts for common citizen scenarios
+
+  TAB 3 – POLICY & ORDINANCE ANALYZER
+  • Paste policy text or upload PDFs (local extraction)
+  • Tasks: Summarize, Extract Clauses, Assess, Sensitive Review
+  • Sample ordinance included (with internal note detection)
+  • Sensitive toggle ON by default — internal docs stay local
+
+  TAB 4 – DISASTER RESPONSE FIELD BRIEFING
+  • ALWAYS local-only — works in airplane mode
+  • Tasks: Situation Brief, Action Checklist, Clarify Notes, Timeline
+  • Summaries queued for sync when connectivity returns
+  • Quick prompts: flood, fire, storm scenarios
+
+  TAB 5 – PERMIT / INSPECTION ASSISTANT
+  • Convert field notes to structured data
+  • Tasks: Extract Fields, Summarize, Draft Report, Flag Issues
+  • Sample inspection notes included
+  • Local-first with optional cloud for analytics
+
+  TAB 6 – HYBRID DASHBOARD
+  • Total inferences, local vs cloud split
+  • PII interceptions counter
+  • Routing decision breakdown with reason codes
+  • Agency-scale projection calculator
+  • Carbon savings estimator
+  • Recent routing log with full audit trail
+
+
+════════════════════════════════════════════════════════════════════════════════
+THE DEMO MOMENTS
+════════════════════════════════════════════════════════════════════════════════
+
+  MOMENT 1 — PII INTERCEPTION:
+  Type a message with a phone number or SSN in Counter Service.
+  Watch the PII badge light up and routing force to "LOCAL (PII)".
+  The data never leaves the device.
+
+  MOMENT 2 — AIRPLANE MODE:
+  Go to Disaster Response. Turn on AIRPLANE MODE.
+  Generate a situation brief. It works perfectly.
+  Show the dashboard — all local, $0.00 cloud cost.
+
+  MOMENT 3 — HYBRID ROUTING:
+  (Requires Azure OpenAI configured)
+  Send a clean query with no PII through Counter Service.
+  Watch it route to CLOUD for deeper reasoning.
+  Then send the same query with "Mark Sensitive" toggled on.
+  Watch it force to LOCAL.
+
+  MOMENT 4 — THE COST CASE:
+  Open the Dashboard. Show the projection calculator.
+  500 staff × 25 tasks/day = 3.25M inferences/year.
+  At cloud rates, that's real money. With NPU, it's $0.
+
+
+════════════════════════════════════════════════════════════════════════════════
+REQUIREMENTS
+════════════════════════════════════════════════════════════════════════════════
+
+  • Windows 11 Copilot+ PC with Intel Core Ultra NPU
+  • Python 3.10+
+  • Foundry Local (installed automatically by Setup.bat)
+  • No internet required after first setup!
+  • Azure OpenAI (optional, for hybrid cloud features)
+
+
+════════════════════════════════════════════════════════════════════════════════
+INTEL NPU NOTES
+════════════════════════════════════════════════════════════════════════════════
+
+  • The app auto-detects Intel silicon and optimizes for NPU
+  • Preferred NPU models: phi-4-mini, phi-3.5-mini, phi-3-mini-4k
+  • If no NPU model is available, CPU fallback is automatic
+  • Warmup runs automatically on Intel (safe — unlike QNN on Snapdragon)
+  • Intel Core Ultra NPU draws ~3W vs 300+W for cloud GPU
+
+
+════════════════════════════════════════════════════════════════════════════════
+REFERENCE
+════════════════════════════════════════════════════════════════════════════════
+
+  Blog: https://techcommunity.microsoft.com/blog/surfaceitpro/vibe-coding-for-the-npu/4497674
+  Foundry Local: https://learn.microsoft.com/en-us/azure/ai-foundry/foundry-local/

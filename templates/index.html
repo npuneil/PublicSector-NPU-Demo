@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Public Sector Hybrid AI Demo — Intel NPU</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ── Reset & Base ─────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --gov-navy: #1a2744;
+            --gov-navy-dark: #0f1a2e;
+            --gov-navy-light: #e8ecf3;
+            --gov-blue: #2563eb;
+            --gov-blue-dark: #1d4ed8;
+            --gov-blue-light: #dbeafe;
+            --gov-white: #FFFFFF;
+            --gov-gray-50: #f8fafc;
+            --gov-gray-100: #f1f5f9;
+            --gov-gray-200: #e2e8f0;
+            --gov-gray-300: #cbd5e1;
+            --gov-gray-400: #94a3b8;
+            --gov-gray-600: #475569;
+            --gov-gray-800: #1e293b;
+            --gov-green: #059669;
+            --gov-green-light: #d1fae5;
+            --gov-orange: #d97706;
+            --gov-orange-light: #fef3c7;
+            --gov-red: #dc2626;
+            --gov-red-light: #fee2e2;
+            --gov-purple: #7c3aed;
+            --gov-purple-light: #ede9fe;
+            --radius: 10px;
+            --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+            --shadow-md: 0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.06);
+            --shadow-lg: 0 10px 15px rgba(0,0,0,.1), 0 4px 6px rgba(0,0,0,.05);
+        }
+        html { font-size: 15px; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--gov-gray-50);
+            color: var(--gov-gray-800);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── Header ───────────────────────────────────────── */
+        .header {
+            background: linear-gradient(135deg, var(--gov-navy) 0%, var(--gov-navy-dark) 100%);
+            color: var(--gov-white);
+            padding: 0 2rem;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .header-logo { font-size: 1.5rem; }
+        .header-divider {
+            width: 1px;
+            height: 32px;
+            background: rgba(255,255,255,.25);
+        }
+        .header-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            letter-spacing: .02em;
+        }
+        .header-subtitle {
+            font-size: .7rem;
+            opacity: .7;
+            font-weight: 400;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .status-chip {
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .3rem .8rem;
+            border-radius: 20px;
+            font-size: .75rem;
+            font-weight: 600;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+        .status-chip.online { background: rgba(5,150,105,.2); }
+        .status-chip.online .status-dot { background: #10b981; }
+        .status-chip.cloud { background: rgba(37,99,235,.2); }
+        .status-chip.cloud .status-dot { background: #60a5fa; }
+        .status-chip.offline { background: rgba(220,38,38,.2); }
+        .status-chip.offline .status-dot { background: #ef4444; }
+
+        /* ── Tabs ──────────────────────────────────────────── */
+        .tab-bar {
+            background: var(--gov-white);
+            border-bottom: 1px solid var(--gov-gray-200);
+            display: flex;
+            padding: 0 2rem;
+            overflow-x: auto;
+            box-shadow: var(--shadow);
+        }
+        .tab-btn {
+            padding: .85rem 1.3rem;
+            border: none;
+            background: none;
+            color: var(--gov-gray-600);
+            font-family: inherit;
+            font-size: .85rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all .2s;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: .45rem;
+        }
+        .tab-btn:hover { color: var(--gov-blue); background: var(--gov-gray-50); }
+        .tab-btn.active {
+            color: var(--gov-blue);
+            border-bottom-color: var(--gov-blue);
+            font-weight: 600;
+        }
+        .tab-icon { font-size: 1.1rem; }
+
+        /* ── Content ───────────────────────────────────────── */
+        .content { flex: 1; padding: 1.5rem 2rem 3rem; max-width: 1100px; margin: 0 auto; width: 100%; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* ── Cards ─────────────────────────────────────────── */
+        .card {
+            background: var(--gov-white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gov-gray-200);
+            padding: 1.5rem;
+            margin-bottom: 1.2rem;
+        }
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: .8rem;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        /* ── Home tab ──────────────────────────────────────── */
+        .hero {
+            background: linear-gradient(135deg, var(--gov-navy) 0%, #1e3a5f 50%, var(--gov-blue-dark) 100%);
+            color: var(--gov-white);
+            border-radius: var(--radius);
+            padding: 2.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .hero h1 { font-size: 1.8rem; margin-bottom: .5rem; }
+        .hero p { opacity: .85; font-size: .95rem; max-width: 650px; margin: 0 auto; }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        .feature-card {
+            background: var(--gov-white);
+            border-radius: var(--radius);
+            padding: 1.3rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gov-gray-200);
+            transition: transform .2s, box-shadow .2s;
+        }
+        .feature-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .feature-icon { font-size: 2rem; margin-bottom: .6rem; }
+        .feature-card h3 { font-size: .9rem; margin-bottom: .3rem; }
+        .feature-card p { font-size: .78rem; color: var(--gov-gray-600); line-height: 1.4; }
+
+        /* ── Chat Interface ────────────────────────────────── */
+        .chat-container { display: flex; flex-direction: column; gap: 1rem; }
+        .chat-messages {
+            min-height: 250px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 1rem;
+            background: var(--gov-gray-50);
+            border-radius: var(--radius);
+            border: 1px solid var(--gov-gray-200);
+        }
+        .chat-msg {
+            margin-bottom: .8rem;
+            padding: .7rem 1rem;
+            border-radius: 8px;
+            font-size: .88rem;
+            line-height: 1.5;
+            max-width: 85%;
+            word-wrap: break-word;
+        }
+        .chat-msg.user {
+            background: var(--gov-blue);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 2px;
+        }
+        .chat-msg.assistant {
+            background: var(--gov-white);
+            border: 1px solid var(--gov-gray-200);
+            border-bottom-left-radius: 2px;
+        }
+        .chat-msg .meta {
+            font-size: .7rem;
+            margin-top: .4rem;
+            opacity: .7;
+            display: flex;
+            gap: .8rem;
+            flex-wrap: wrap;
+        }
+        .chat-msg.assistant .meta { color: var(--gov-gray-400); }
+        .chat-input-row {
+            display: flex;
+            gap: .5rem;
+        }
+        .chat-input {
+            flex: 1;
+            padding: .7rem 1rem;
+            border: 1px solid var(--gov-gray-300);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: .88rem;
+            outline: none;
+            transition: border-color .2s;
+        }
+        .chat-input:focus { border-color: var(--gov-blue); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+
+        /* ── Buttons ───────────────────────────────────────── */
+        .btn {
+            padding: .6rem 1.2rem;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: .85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s;
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+        }
+        .btn-primary { background: var(--gov-blue); color: white; }
+        .btn-primary:hover { background: var(--gov-blue-dark); }
+        .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+        .btn-secondary { background: var(--gov-gray-100); color: var(--gov-gray-800); border: 1px solid var(--gov-gray-300); }
+        .btn-secondary:hover { background: var(--gov-gray-200); }
+        .btn-sm { padding: .4rem .8rem; font-size: .78rem; }
+        .btn-outline { background: transparent; border: 1px solid var(--gov-gray-300); color: var(--gov-gray-600); }
+        .btn-outline:hover { background: var(--gov-gray-100); }
+
+        /* ── Quick prompts ─────────────────────────────────── */
+        .quick-prompts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .4rem;
+            margin-bottom: .8rem;
+        }
+        .quick-prompt {
+            padding: .35rem .75rem;
+            background: var(--gov-blue-light);
+            color: var(--gov-blue-dark);
+            border: 1px solid rgba(37,99,235,.15);
+            border-radius: 20px;
+            font-size: .75rem;
+            cursor: pointer;
+            transition: all .15s;
+        }
+        .quick-prompt:hover { background: var(--gov-blue); color: white; }
+
+        /* ── Voice / Mic ───────────────────────────────────── */
+        .btn-mic {
+            display: inline-flex; align-items: center; gap: .35rem;
+            padding: .5rem .85rem; border-radius: 8px; border: 1.5px solid var(--gov-gray-300);
+            background: var(--gov-white); font-family: inherit; font-size: .82rem; cursor: pointer;
+            transition: all .2s;
+        }
+        .btn-mic:hover { border-color: var(--gov-blue); }
+        .btn-mic.recording {
+            background: var(--gov-red); color: white; border-color: var(--gov-red);
+            animation: pulse 1.5s infinite;
+        }
+        .mic-status { font-size: .75rem; color: var(--gov-gray-400); }
+
+        /* ── Controls Row ──────────────────────────────────── */
+        .controls-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: .8rem;
+            flex-wrap: wrap;
+        }
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            font-size: .78rem;
+            color: var(--gov-gray-600);
+        }
+        .toggle {
+            position: relative;
+            width: 36px;
+            height: 20px;
+        }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute;
+            inset: 0;
+            background: var(--gov-gray-300);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: .2s;
+        }
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            left: 2px;
+            bottom: 2px;
+            background: white;
+            border-radius: 50%;
+            transition: .2s;
+        }
+        .toggle input:checked + .toggle-slider { background: var(--gov-orange); }
+        .toggle input:checked + .toggle-slider::before { transform: translateX(16px); }
+        .pii-badge {
+            display: none;
+            padding: .25rem .6rem;
+            background: var(--gov-red-light);
+            color: var(--gov-red);
+            border-radius: 12px;
+            font-size: .72rem;
+            font-weight: 600;
+        }
+        .pii-badge.visible { display: inline-flex; align-items: center; gap: .3rem; }
+
+        /* ── Route indicator ───────────────────────────────── */
+        .route-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            padding: .15rem .5rem;
+            border-radius: 8px;
+            font-size: .68rem;
+            font-weight: 600;
+        }
+        .route-badge.local { background: var(--gov-green-light); color: var(--gov-green); }
+        .route-badge.cloud { background: var(--gov-blue-light); color: var(--gov-blue); }
+        .route-badge.pii { background: var(--gov-red-light); color: var(--gov-red); }
+
+        /* ── Document area ─────────────────────────────────── */
+        .doc-textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: .8rem;
+            border: 1px solid var(--gov-gray-300);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: .85rem;
+            resize: vertical;
+            outline: none;
+        }
+        .doc-textarea:focus { border-color: var(--gov-blue); }
+        .task-tabs {
+            display: flex;
+            gap: .3rem;
+            margin-bottom: .8rem;
+        }
+        .task-tab {
+            padding: .4rem .8rem;
+            border: 1px solid var(--gov-gray-300);
+            background: var(--gov-gray-50);
+            border-radius: 6px;
+            font-size: .78rem;
+            cursor: pointer;
+            transition: all .15s;
+        }
+        .task-tab.active { background: var(--gov-blue); color: white; border-color: var(--gov-blue); }
+        .task-tab:hover:not(.active) { background: var(--gov-gray-200); }
+
+        /* ── Result display ────────────────────────────────── */
+        .result-box {
+            background: var(--gov-gray-50);
+            border: 1px solid var(--gov-gray-200);
+            border-radius: 8px;
+            padding: 1rem;
+            font-size: .88rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            min-height: 100px;
+        }
+        .result-meta {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: .6rem;
+            font-size: .72rem;
+            color: var(--gov-gray-400);
+        }
+
+        /* ── Dashboard ─────────────────────────────────────── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: .8rem;
+            margin-bottom: 1.2rem;
+        }
+        .stat-card {
+            background: var(--gov-white);
+            border-radius: var(--radius);
+            padding: 1.1rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gov-gray-200);
+        }
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--gov-navy);
+        }
+        .stat-label {
+            font-size: .72rem;
+            color: var(--gov-gray-600);
+            margin-top: .2rem;
+            text-transform: uppercase;
+            letter-spacing: .03em;
+        }
+        .stat-card.highlight { border-left: 4px solid var(--gov-blue); }
+        .stat-card.green { border-left: 4px solid var(--gov-green); }
+        .stat-card.orange { border-left: 4px solid var(--gov-orange); }
+        .stat-card.red { border-left: 4px solid var(--gov-red); }
+
+        .log-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .78rem;
+        }
+        .log-table th {
+            text-align: left;
+            padding: .5rem .6rem;
+            background: var(--gov-gray-100);
+            border-bottom: 2px solid var(--gov-gray-200);
+            font-weight: 600;
+            color: var(--gov-gray-600);
+            font-size: .72rem;
+            text-transform: uppercase;
+        }
+        .log-table td {
+            padding: .45rem .6rem;
+            border-bottom: 1px solid var(--gov-gray-100);
+        }
+
+        /* ── Projection Calculator ─────────────────────────── */
+        .calc-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        .calc-input-group { margin-bottom: .8rem; }
+        .calc-input-group label {
+            display: block;
+            font-size: .78rem;
+            font-weight: 500;
+            margin-bottom: .3rem;
+            color: var(--gov-gray-600);
+        }
+        .calc-input {
+            width: 100%;
+            padding: .5rem .7rem;
+            border: 1px solid var(--gov-gray-300);
+            border-radius: 6px;
+            font-size: .88rem;
+            font-family: inherit;
+        }
+        .calc-result {
+            background: var(--gov-green-light);
+            border-radius: var(--radius);
+            padding: 1.2rem;
+            text-align: center;
+        }
+        .calc-result .big-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gov-green);
+        }
+
+        /* ── Loading spinner ───────────────────────────────── */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--gov-gray-300);
+            border-top-color: var(--gov-blue);
+            border-radius: 50%;
+            animation: spin .6s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-msg {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .7rem 1rem;
+            color: var(--gov-gray-400);
+            font-size: .85rem;
+        }
+
+        /* ── Sample data button ────────────────────────────── */
+        .sample-btn {
+            font-size: .75rem;
+            color: var(--gov-blue);
+            background: none;
+            border: none;
+            cursor: pointer;
+            text-decoration: underline;
+            padding: 0;
+        }
+        .sample-btn:hover { color: var(--gov-blue-dark); }
+
+        /* ── Responsive ────────────────────────────────────── */
+        @media (max-width: 768px) {
+            .header { padding: 0 1rem; }
+            .content { padding: 1rem; }
+            .hero { padding: 1.5rem; }
+            .hero h1 { font-size: 1.3rem; }
+            .calc-grid { grid-template-columns: 1fr; }
+            .tab-btn { padding: .7rem .8rem; font-size: .78rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══════ HEADER ═══════ -->
+<header class="header">
+    <div class="header-left">
+        <span class="header-logo">🏛️</span>
+        <div class="header-divider"></div>
+        <div>
+            <div class="header-title">Public Sector Hybrid AI</div>
+            <div class="header-subtitle">On-Device + Cloud — Intel NPU Optimized</div>
+        </div>
+    </div>
+    <div class="header-right">
+        <div class="status-chip online" id="localStatus">
+            <span class="status-dot"></span>
+            <span id="localStatusText">Connecting...</span>
+        </div>
+        <div class="status-chip cloud" id="cloudStatus" style="display:none">
+            <span class="status-dot"></span>
+            <span id="cloudStatusText">Cloud</span>
+        </div>
+    </div>
+</header>
+
+<!-- ═══════ TABS ═══════ -->
+<nav class="tab-bar">
+    <button class="tab-btn active" data-tab="home"><span class="tab-icon">🏠</span> Home</button>
+    <button class="tab-btn" data-tab="counter"><span class="tab-icon">🗣️</span> Counter Service</button>
+    <button class="tab-btn" data-tab="policy"><span class="tab-icon">📜</span> Policy Analyzer</button>
+    <button class="tab-btn" data-tab="disaster"><span class="tab-icon">🚨</span> Disaster Response</button>
+    <button class="tab-btn" data-tab="permit"><span class="tab-icon">🔍</span> Permit / Inspection</button>
+    <button class="tab-btn" data-tab="dashboard"><span class="tab-icon">📊</span> Dashboard</button>
+</nav>
+
+<!-- ═══════ CONTENT ═══════ -->
+<main class="content">
+
+<!-- ── HOME TAB ───────────────────────────────────────── -->
+<div class="tab-content active" id="tab-home">
+    <div class="hero">
+        <h1>🏛️ Hybrid AI for Public Sector</h1>
+        <p>On-device AI for sensitive work. Cloud AI for complex analysis. Runtime decisioning determines where each request is processed — automatically.</p>
+    </div>
+
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-icon">🔒</div>
+            <h3>Privacy-First</h3>
+            <p>PII detected in citizen data stays on-device. Sensitive content never leaves the PC. Fail-closed routing — if uncertain, process locally.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">✈️</div>
+            <h3>Works Offline</h3>
+            <p>Disaster response, field inspections, and degraded-connectivity environments. Full AI capability without internet.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🧠</div>
+            <h3>Intel NPU</h3>
+            <p>AI runs on the Intel Core Ultra NPU — dedicated silicon for inference. ~3 watts vs 300+ watts for cloud GPU. Zero marginal cost.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">☁️</div>
+            <h3>Cloud When Needed</h3>
+            <p>Complex analysis, large corpora, and cross-department coordination route to Azure OpenAI — only after sanitization.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">⚡</div>
+            <h3>Runtime Decisioning</h3>
+            <p>Each request is evaluated at runtime: PII content, sensitivity, connectivity, cost, and module policy determine local vs cloud.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">💰</div>
+            <h3>Cost Efficiency</h3>
+            <p>High-volume routine tasks on NPU at $0. Cloud budget reserved for complex reasoning. Track savings on the dashboard.</p>
+        </div>
+    </div>
+</div>
+
+<!-- ── COUNTER SERVICE TAB ────────────────────────────── -->
+<div class="tab-content" id="tab-counter">
+    <div class="card">
+        <div class="card-title">🗣️ Counter Service Copilot</div>
+        <p style="font-size:.82rem;color:var(--gov-gray-600);margin-bottom:1rem;">
+            Help front desk staff and call center agents handle citizen inquiries. PII is detected and kept on-device automatically.
+        </p>
+
+        <div class="controls-row">
+            <div class="toggle-group">
+                <label class="toggle">
+                    <input type="checkbox" id="counterSensitive">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span>🔒 Mark Sensitive</span>
+            </div>
+            <div class="toggle-group">
+                <label class="toggle">
+                    <input type="checkbox" id="counterForceLocal">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span>📱 Force Local</span>
+            </div>
+            <span class="pii-badge" id="counterPiiBadge">🛡️ PII Detected</span>
+        </div>
+
+        <div class="quick-prompts">
+            <span class="quick-prompt" onclick="counterChat('A citizen is calling about their water bill being too high this month. They want to dispute the charges.')">💧 Water bill dispute</span>
+            <span class="quick-prompt" onclick="counterChat('Someone needs to renew their business license. It expired last month.')">📋 License renewal</span>
+            <span class="quick-prompt" onclick="counterChat('A resident is asking about the process to apply for a building permit for a home addition.')">🏗️ Building permit</span>
+            <span class="quick-prompt" onclick="counterChat('A citizen wants to file a noise complaint about a construction site near their home that starts work at 6 AM.')">📢 Noise complaint</span>
+            <span class="quick-prompt" onclick="counterChat('Someone is asking about property tax assessment appeals. They think their property was over-assessed.')">🏠 Tax assessment</span>
+        </div>
+
+        <div class="chat-container">
+            <div class="chat-messages" id="counterMessages"></div>
+            <div class="chat-input-row">
+                <input class="chat-input" id="counterInput" placeholder="Type a citizen inquiry..." onkeydown="if(event.key==='Enter')counterSend()">
+                <button class="btn btn-primary" onclick="counterSend()">Send</button>
+                <button class="btn-mic" id="counterMicBtn" onclick="toggleMic('counterInput')">
+                    <span id="counterMicIcon">🎤</span>
+                    <span id="counterMicLabel">Dictate</span>
+                </button>
+            </div>
+            <span class="mic-status" id="counterMicStatus"></span>
+        </div>
+    </div>
+</div>
+
+<!-- ── POLICY ANALYZER TAB ────────────────────────────── -->
+<div class="tab-content" id="tab-policy">
+    <div class="card">
+        <div class="card-title">📜 Policy & Ordinance Analyzer</div>
+        <p style="font-size:.82rem;color:var(--gov-gray-600);margin-bottom:1rem;">
+            Paste policy text, upload PDFs, or use sample documents. On-device analysis keeps sensitive internal notes local.
+        </p>
+
+        <div class="controls-row">
+            <div class="toggle-group">
+                <label class="toggle">
+                    <input type="checkbox" id="policySensitive" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+                <span>🔒 Mark Sensitive</span>
+            </div>
+            <div class="toggle-group">
+                <label class="toggle">
+                    <input type="checkbox" id="policyForceLocal">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span>📱 Force Local</span>
+            </div>
+            <button class="btn btn-sm btn-outline" onclick="loadSamplePolicy()">📄 Load Sample Ordinance</button>
+            <label class="btn btn-sm btn-outline" style="cursor:pointer">
+                📎 Upload PDF
+                <input type="file" accept=".pdf" style="display:none" onchange="uploadPolicyPdf(this)">
+            </label>
+        </div>
+
+        <div class="task-tabs" id="policyTaskTabs">
+            <button class="task-tab active" data-task="summarize" onclick="setPolicyTask(this,'summarize')">📝 Summarize</button>
+            <button class="task-tab" data-task="extract" onclick="setPolicyTask(this,'extract')">🔍 Extract Clauses</button>
+            <button class="task-tab" data-task="compare" onclick="setPolicyTask(this,'compare')">⚖️ Assess</button>
+            <button class="task-tab" data-task="sensitive_review" onclick="setPolicyTask(this,'sensitive_review')">🛡️ Sensitive Review</button>
+        </div>
+
+        <textarea class="doc-textarea" id="policyText" placeholder="Paste policy or ordinance text here..."></textarea>
+        <div style="margin-top:.6rem;display:flex;gap:.5rem;align-items:center">
+            <button class="btn btn-primary" onclick="analyzePolicy()" id="policyAnalyzeBtn">Analyze</button>
+            <span class="pii-badge" id="policyPiiBadge">🛡️ PII Detected</span>
+        </div>
+
+        <div style="margin-top:1rem">
+            <div class="result-box" id="policyResult" style="display:none"></div>
+            <div class="result-meta" id="policyMeta" style="display:none"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ── DISASTER RESPONSE TAB ──────────────────────────── -->
+<div class="tab-content" id="tab-disaster">
+    <div class="card">
+        <div class="card-title">🚨 Disaster Response Field Briefing</div>
+        <p style="font-size:.82rem;color:var(--gov-gray-600);margin-bottom:.4rem;">
+            Generate situation briefs, action checklists, and incident summaries — entirely on-device. Works in airplane mode.
+        </p>
+        <p style="font-size:.75rem;color:var(--gov-orange);margin-bottom:1rem;">
+            ⚡ This module is always local-only. Summaries are queued for sync when connectivity returns.
+        </p>
+
+        <div class="task-tabs" id="disasterTaskTabs">
+            <button class="task-tab active" data-task="briefing" onclick="setDisasterTask(this,'briefing')">📋 Situation Brief</button>
+            <button class="task-tab" data-task="checklist" onclick="setDisasterTask(this,'checklist')">✅ Action Checklist</button>
+            <button class="task-tab" data-task="translate" onclick="setDisasterTask(this,'translate')">🌐 Clarify Notes</button>
+            <button class="task-tab" data-task="incident_log" onclick="setDisasterTask(this,'incident_log')">📊 Incident Timeline</button>
+        </div>
+
+        <div class="quick-prompts">
+            <span class="quick-prompt" onclick="disasterQuick('Flooding reported on Main St and Oak Ave. Water level 2ft rising. 3 families evacuated. Power out in 4-block radius. Fire dept on scene. Roads impassable south of bridge.')">🌊 Flood report</span>
+            <span class="quick-prompt" onclick="disasterQuick('Structure fire at 450 Industrial Blvd. 2-alarm. Building partially collapsed east side. 12 workers evacuated, 2 unaccounted. Hazmat team requested - chemical storage on site. Wind NW 15mph.')">🔥 Structure fire</span>
+            <span class="quick-prompt" onclick="disasterQuick('Severe thunderstorm damage assessment: 47 homes affected, 8 with major roof damage. Trees down on Elm, Pine, and Cedar streets. Power lines down - utility notified. 2 shelters opened at Community Center and High School.')">⛈️ Storm damage</span>
+        </div>
+
+        <textarea class="doc-textarea" id="disasterText" placeholder="Enter field notes, incident logs, or situation details..."></textarea>
+        <div style="margin-top:.6rem;display:flex;gap:.5rem;align-items:center">
+            <button class="btn btn-primary" onclick="processDisaster()" id="disasterBtn">Generate</button>
+            <button class="btn-mic" id="disasterMicBtn" onclick="toggleMic('disasterText')">
+                <span id="disasterMicIcon">🎤</span>
+                <span id="disasterMicLabel">Dictate</span>
+            </button>
+            <span class="mic-status" id="disasterMicStatus"></span>
+        </div>
+
+        <div style="margin-top:1rem">
+            <div class="result-box" id="disasterResult" style="display:none"></div>
+            <div class="result-meta" id="disasterMeta" style="display:none"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ── PERMIT / INSPECTION TAB ────────────────────────── -->
+<div class="tab-content" id="tab-permit">
+    <div class="card">
+        <div class="card-title">🔍 Permit / Inspection Assistant</div>
+        <p style="font-size:.82rem;color:var(--gov-gray-600);margin-bottom:1rem;">
+            Convert field notes to structured data, draft inspection reports, and flag compliance issues.
+        </p>
+
+        <div class="controls-row">
+            <div class="toggle-group">
+                <label class="toggle">
+                    <input type="checkbox" id="permitSensitive">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span>🔒 Mark Sensitive</span>
+            </div>
+            <div class="toggle-group">
+                <label class="toggle">
+                    <input type="checkbox" id="permitForceLocal">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span>📱 Force Local</span>
+            </div>
+            <button class="btn btn-sm btn-outline" onclick="loadSampleInspection()">📋 Load Sample Notes</button>
+        </div>
+
+        <div class="task-tabs" id="permitTaskTabs">
+            <button class="task-tab active" data-task="extract" onclick="setPermitTask(this,'extract')">🔍 Extract Fields</button>
+            <button class="task-tab" data-task="summarize" onclick="setPermitTask(this,'summarize')">📝 Summarize</button>
+            <button class="task-tab" data-task="draft_report" onclick="setPermitTask(this,'draft_report')">📄 Draft Report</button>
+            <button class="task-tab" data-task="flag_issues" onclick="setPermitTask(this,'flag_issues')">⚠️ Flag Issues</button>
+        </div>
+
+        <textarea class="doc-textarea" id="permitText" placeholder="Enter inspection notes, permit details, or field observations..."></textarea>
+        <div style="margin-top:.6rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+            <button class="btn btn-primary" onclick="processPermit()" id="permitBtn">Process</button>
+            <button class="btn-mic" id="permitMicBtn" onclick="toggleMic('permitText')">
+                <span id="permitMicIcon">🎤</span>
+                <span id="permitMicLabel">Dictate</span>
+            </button>
+            <span class="pii-badge" id="permitPiiBadge">🛡️ PII Detected</span>
+            <span class="mic-status" id="permitMicStatus"></span>
+        </div>
+
+        <div style="margin-top:1rem">
+            <div class="result-box" id="permitResult" style="display:none"></div>
+            <div class="result-meta" id="permitMeta" style="display:none"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ── DASHBOARD TAB ──────────────────────────────────── -->
+<div class="tab-content" id="tab-dashboard">
+    <div class="stats-grid" id="dashboardStats">
+        <div class="stat-card highlight">
+            <div class="stat-value" id="statTotal">0</div>
+            <div class="stat-label">Total Inferences</div>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-value" id="statLocal">0</div>
+            <div class="stat-label">Routed Local</div>
+        </div>
+        <div class="stat-card" style="border-left:4px solid var(--gov-blue)">
+            <div class="stat-value" id="statCloud">0</div>
+            <div class="stat-label">Routed Cloud</div>
+        </div>
+        <div class="stat-card red">
+            <div class="stat-value" id="statPii">0</div>
+            <div class="stat-label">PII Interceptions</div>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-value" id="statCost">$0</div>
+            <div class="stat-label">Cloud Cost Saved</div>
+        </div>
+        <div class="stat-card orange">
+            <div class="stat-value" id="statLatency">0ms</div>
+            <div class="stat-label">Avg Latency</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="statTokens">0</div>
+            <div class="stat-label">Total Tokens</div>
+        </div>
+        <div class="stat-card orange">
+            <div class="stat-value" id="statSync">0</div>
+            <div class="stat-label">Pending Sync</div>
+        </div>
+    </div>
+
+    <!-- Projection Calculator -->
+    <div class="card">
+        <div class="card-title">📊 Agency-Scale Projection</div>
+        <div class="calc-grid">
+            <div>
+                <div class="calc-input-group">
+                    <label>Staff using AI daily</label>
+                    <input class="calc-input" id="calcUsers" type="number" value="500" oninput="updateProjection()">
+                </div>
+                <div class="calc-input-group">
+                    <label>AI tasks per person per day</label>
+                    <input class="calc-input" id="calcTasks" type="number" value="25" oninput="updateProjection()">
+                </div>
+                <div class="calc-input-group">
+                    <label>Cloud cost per 1K tokens ($)</label>
+                    <input class="calc-input" id="calcCostPer1k" type="number" value="0.01" step="0.001" oninput="updateProjection()">
+                </div>
+                <div class="calc-input-group">
+                    <label>Avg tokens per task</label>
+                    <input class="calc-input" id="calcTokensPerTask" type="number" value="500" oninput="updateProjection()">
+                </div>
+            </div>
+            <div class="calc-result">
+                <div style="font-size:.82rem;color:var(--gov-gray-600);margin-bottom:.8rem">Estimated Annual Savings</div>
+                <div class="big-number" id="calcSavings">$0</div>
+                <div style="font-size:.78rem;color:var(--gov-gray-600);margin-top:.6rem">
+                    <span id="calcInferences">0</span> inferences/year
+                </div>
+                <div style="font-size:.78rem;color:var(--gov-green);margin-top:.3rem">
+                    🌱 <span id="calcCarbon">0</span> kg CO₂ saved vs cloud GPU
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Routing Reason Breakdown -->
+    <div class="card">
+        <div class="card-title">🔀 Routing Decision Breakdown</div>
+        <div id="reasonBreakdown" style="font-size:.85rem;color:var(--gov-gray-600)">
+            Run some inferences to see routing decisions here.
+        </div>
+    </div>
+
+    <!-- Recent Activity Log -->
+    <div class="card">
+        <div class="card-title">📋 Recent Routing Log</div>
+        <div style="overflow-x:auto">
+            <table class="log-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Module</th>
+                        <th>Route</th>
+                        <th>Reason</th>
+                        <th>Tokens</th>
+                        <th>Latency</th>
+                        <th>Hardware</th>
+                    </tr>
+                </thead>
+                <tbody id="logTableBody">
+                    <tr><td colspan="7" style="text-align:center;color:var(--gov-gray-400)">No activity yet</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+</main>
+
+<!-- ═══════ JAVASCRIPT ═══════ -->
+<script>
+// ── Tab switching ────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+        if (btn.dataset.tab === 'dashboard') refreshDashboard();
+    });
+});
+
+// ── Status check ─────────────────────────────────────────
+async function checkStatus() {
+    try {
+        const r = await fetch('/api/status');
+        const d = await r.json();
+        const el = document.getElementById('localStatus');
+        const txt = document.getElementById('localStatusText');
+        if (d.foundry_connected) {
+            el.className = 'status-chip online';
+            txt.textContent = d.hardware === 'NPU' ? 'NPU Online' : 'CPU Online';
+        } else {
+            el.className = 'status-chip offline';
+            txt.textContent = 'AI Offline';
+        }
+        const cloudEl = document.getElementById('cloudStatus');
+        const cloudTxt = document.getElementById('cloudStatusText');
+        if (d.cloud_available) {
+            cloudEl.style.display = 'flex';
+            cloudTxt.textContent = 'Cloud Ready';
+        } else {
+            cloudEl.style.display = 'none';
+        }
+    } catch(e) {
+        document.getElementById('localStatus').className = 'status-chip offline';
+        document.getElementById('localStatusText').textContent = 'Disconnected';
+    }
+}
+checkStatus();
+setInterval(checkStatus, 15000);
+
+// ── PII live detection (UI hint only — server enforces) ──
+async function checkPii(text, badgeId) {
+    const badge = document.getElementById(badgeId);
+    if (!text || text.length < 5) { badge.classList.remove('visible'); return; }
+    try {
+        const r = await fetch('/api/pii-check', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({text})
+        });
+        const d = await r.json();
+        if (d.pii_detected) {
+            badge.textContent = '🛡️ PII: ' + d.pii_types.join(', ');
+            badge.classList.add('visible');
+        } else {
+            badge.classList.remove('visible');
+        }
+    } catch(e) { badge.classList.remove('visible'); }
+}
+
+// Debounced PII checks on inputs
+let piiTimers = {};
+function debouncePii(inputId, badgeId) {
+    const el = document.getElementById(inputId);
+    if (!el) return;
+    el.addEventListener('input', () => {
+        clearTimeout(piiTimers[inputId]);
+        piiTimers[inputId] = setTimeout(() => checkPii(el.value, badgeId), 500);
+    });
+}
+debouncePii('counterInput', 'counterPiiBadge');
+debouncePii('policyText', 'policyPiiBadge');
+debouncePii('permitText', 'permitPiiBadge');
+
+// ── Helper: format route badge ───────────────────────────
+function routeBadge(data) {
+    const cls = data.pii_detected ? 'pii' : (data.route === 'cloud' ? 'cloud' : 'local');
+    const icon = data.pii_detected ? '🛡️' : (data.route === 'cloud' ? '☁️' : '📱');
+    let label = data.route.toUpperCase();
+    if (data.pii_detected) label = 'LOCAL (PII)';
+    return `<span class="route-badge ${cls}">${icon} ${label}</span>`;
+}
+
+function metaHtml(data) {
+    return `${routeBadge(data)} &nbsp; ⚡ ${data.latency_ms}ms &nbsp; 🔤 ${data.tokens} tokens &nbsp; 💰 ${data.cloud_cost_saved} saved &nbsp; 🖥️ ${data.hardware}`;
+}
+
+// ── Counter Service Copilot ──────────────────────────────
+function counterChat(msg) {
+    document.getElementById('counterInput').value = msg;
+    counterSend();
+}
+
+async function counterSend() {
+    const input = document.getElementById('counterInput');
+    const msg = input.value.trim();
+    if (!msg) return;
+    input.value = '';
+
+    const msgs = document.getElementById('counterMessages');
+    msgs.innerHTML += `<div class="chat-msg user">${escHtml(msg)}</div>`;
+    msgs.innerHTML += `<div class="loading-msg" id="counterLoading"><span class="spinner"></span> Processing...</div>`;
+    msgs.scrollTop = msgs.scrollHeight;
+
+    try {
+        const r = await fetch('/api/counter-service', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                message: msg,
+                sensitive: document.getElementById('counterSensitive').checked,
+                force_local: document.getElementById('counterForceLocal').checked,
+            })
+        });
+        const d = await r.json();
+        document.getElementById('counterLoading')?.remove();
+        msgs.innerHTML += `<div class="chat-msg assistant">${escHtml(d.text)}<div class="meta">${metaHtml(d)}</div></div>`;
+        msgs.scrollTop = msgs.scrollHeight;
+    } catch(e) {
+        document.getElementById('counterLoading')?.remove();
+        msgs.innerHTML += `<div class="chat-msg assistant" style="color:var(--gov-red)">Error: ${e.message}</div>`;
+    }
+}
+
+// ── Policy Analyzer ──────────────────────────────────────
+let policyTask = 'summarize';
+function setPolicyTask(el, task) {
+    policyTask = task;
+    document.querySelectorAll('#policyTaskTabs .task-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+}
+
+function loadSamplePolicy() {
+    document.getElementById('policyText').value = `CITY OF RIVERSIDE — ORDINANCE NO. 2024-0847
+NOISE CONTROL AND ABATEMENT
+
+SECTION 1 — PURPOSE
+This ordinance establishes standards for noise control within city limits to protect public health, safety, and welfare. It regulates construction noise, commercial activity noise, and residential disturbances.
+
+SECTION 2 — DEFINITIONS
+"Ambient noise" means the all-encompassing noise at a given location, excluding the noise source under investigation.
+"Construction noise" means sound generated by construction, demolition, or renovation activities.
+"dBA" means A-weighted decibels measured on the A scale of a standard sound level meter.
+
+SECTION 3 — PROHIBITED ACTS
+(a) No person shall operate construction equipment between 9:00 PM and 7:00 AM on weekdays, or between 6:00 PM and 9:00 AM on weekends and holidays.
+(b) Commercial noise shall not exceed 65 dBA at the property line during daytime (7 AM–9 PM) or 55 dBA during nighttime.
+(c) Residential noise complaints may be filed when noise exceeds 55 dBA daytime / 45 dBA nighttime at the complainant's property line.
+
+SECTION 4 — EXEMPTIONS
+Emergency vehicles, utility repair, city-authorized events, and agricultural operations are exempt from this ordinance.
+
+SECTION 5 — ENFORCEMENT
+First violation: written warning. Second violation: $250 fine. Third and subsequent: $500 fine and potential permit revocation.
+[INTERNAL NOTE: Legal reviewed — need to confirm state preemption on Section 3(b) limits. Do not publish until resolved.]
+
+SECTION 6 — EFFECTIVE DATE
+This ordinance takes effect 30 days after adoption by City Council.`;
+}
+
+async function uploadPolicyPdf(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+        const r = await fetch('/api/policy-analyzer/upload-pdf', { method: 'POST', body: formData });
+        const d = await r.json();
+        if (d.error) { alert(d.error); return; }
+        document.getElementById('policyText').value = d.text;
+    } catch(e) { alert('PDF upload failed: ' + e.message); }
+    input.value = '';
+}
+
+async function analyzePolicy() {
+    const text = document.getElementById('policyText').value.trim();
+    if (!text) return;
+    const btn = document.getElementById('policyAnalyzeBtn');
+    btn.disabled = true; btn.textContent = 'Analyzing...';
+
+    try {
+        const r = await fetch('/api/policy-analyzer', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                text, task: policyTask,
+                sensitive: document.getElementById('policySensitive').checked,
+                force_local: document.getElementById('policyForceLocal').checked,
+            })
+        });
+        const d = await r.json();
+        document.getElementById('policyResult').style.display = 'block';
+        document.getElementById('policyResult').textContent = d.text;
+        document.getElementById('policyMeta').style.display = 'flex';
+        document.getElementById('policyMeta').innerHTML = metaHtml(d);
+    } catch(e) {
+        document.getElementById('policyResult').style.display = 'block';
+        document.getElementById('policyResult').textContent = 'Error: ' + e.message;
+    }
+    btn.disabled = false; btn.textContent = 'Analyze';
+}
+
+// ── Disaster Response ────────────────────────────────────
+let disasterTask = 'briefing';
+function setDisasterTask(el, task) {
+    disasterTask = task;
+    document.querySelectorAll('#disasterTaskTabs .task-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+}
+
+function disasterQuick(text) {
+    document.getElementById('disasterText').value = text;
+    processDisaster();
+}
+
+async function processDisaster() {
+    const text = document.getElementById('disasterText').value.trim();
+    if (!text) return;
+    const btn = document.getElementById('disasterBtn');
+    btn.disabled = true; btn.textContent = 'Generating...';
+
+    try {
+        const r = await fetch('/api/disaster-response', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ message: text, task: disasterTask })
+        });
+        const d = await r.json();
+        document.getElementById('disasterResult').style.display = 'block';
+        document.getElementById('disasterResult').textContent = d.text;
+        document.getElementById('disasterMeta').style.display = 'flex';
+        document.getElementById('disasterMeta').innerHTML = metaHtml(d);
+    } catch(e) {
+        document.getElementById('disasterResult').style.display = 'block';
+        document.getElementById('disasterResult').textContent = 'Error: ' + e.message;
+    }
+    btn.disabled = false; btn.textContent = 'Generate';
+}
+
+// ── Permit / Inspection ──────────────────────────────────
+let permitTask = 'extract';
+function setPermitTask(el, task) {
+    permitTask = task;
+    document.querySelectorAll('#permitTaskTabs .task-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+}
+
+function loadSampleInspection() {
+    document.getElementById('permitText').value = `FIELD INSPECTION NOTES — 04/15/2024
+Inspector: J. Martinez, Badge #4471
+Property: 2847 Commerce Dr, Suite 200
+Permit: BP-2024-00391 (Commercial Renovation)
+Type: Rough Framing Inspection
+
+FINDINGS:
+- Framing generally conforms to approved plans
+- Header at east wall opening undersized — plans call for 4x12 LVL, installed 4x10
+- Fire blocking missing at 2nd floor soffit area (IRC R302.11)
+- Electrical rough-in started without separate electrical permit on file
+- HVAC penetrations through fire-rated wall not fire-stopped
+- Emergency exit signage not yet installed (expected at final)
+
+VIOLATIONS:
+1. MAJOR: Undersized header — structural concern, stop work on east wall
+2. MAJOR: Missing fire blocking — code violation IRC R302.11
+3. MINOR: Electrical work without permit — must obtain before cover
+
+STATUS: FAILED — corrections required before re-inspection
+Re-inspection fee: $75
+Next available date: 04/22/2024
+
+Notes: Spoke with site foreman Mike Chen. He acknowledged issues and will contact structural engineer about header. Estimated 5 business days for corrections.`;
+}
+
+async function processPermit() {
+    const text = document.getElementById('permitText').value.trim();
+    if (!text) return;
+    const btn = document.getElementById('permitBtn');
+    btn.disabled = true; btn.textContent = 'Processing...';
+
+    try {
+        const r = await fetch('/api/permit-inspection', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                message: text, task: permitTask,
+                sensitive: document.getElementById('permitSensitive').checked,
+                force_local: document.getElementById('permitForceLocal').checked,
+            })
+        });
+        const d = await r.json();
+        document.getElementById('permitResult').style.display = 'block';
+        document.getElementById('permitResult').textContent = d.text;
+        document.getElementById('permitMeta').style.display = 'flex';
+        document.getElementById('permitMeta').innerHTML = metaHtml(d);
+    } catch(e) {
+        document.getElementById('permitResult').style.display = 'block';
+        document.getElementById('permitResult').textContent = 'Error: ' + e.message;
+    }
+    btn.disabled = false; btn.textContent = 'Process';
+}
+
+// ── Dashboard ────────────────────────────────────────────
+async function refreshDashboard() {
+    try {
+        const r = await fetch('/api/metrics');
+        const d = await r.json();
+        document.getElementById('statTotal').textContent = d.total_inferences;
+        document.getElementById('statLocal').textContent = d.local_count;
+        document.getElementById('statCloud').textContent = d.cloud_count;
+        document.getElementById('statPii').textContent = d.pii_interceptions;
+        document.getElementById('statCost').textContent = d.total_cloud_cost_saved;
+        document.getElementById('statLatency').textContent = d.avg_latency_ms + 'ms';
+        document.getElementById('statTokens').textContent = d.total_tokens.toLocaleString();
+        document.getElementById('statSync').textContent = d.pending_sync;
+
+        // Reason breakdown
+        const reasons = d.reason_stats || {};
+        const reasonLabels = {
+            'PII_DETECTED': '🛡️ PII Intercepted',
+            'MARKED_SENSITIVE': '🔒 Marked Sensitive',
+            'MODULE_POLICY_LOCAL_ONLY': '📱 Module Policy (Local Only)',
+            'CLOUD_UNAVAILABLE': '⚠️ Cloud Unavailable',
+            'FAIL_SAFE_UNCERTAIN': '🔐 Fail-Safe (Uncertain)',
+            'INPUT_TOO_LARGE_FOR_CLOUD': '📏 Input Too Large',
+            'USER_FORCED_LOCAL': '👤 User Forced Local',
+            'CLOUD_ELIGIBLE_NO_PII': '☁️ Cloud Eligible',
+            'DEFAULT_LOCAL': '📱 Default Local',
+        };
+        let reasonHtml = '';
+        for (const [code, count] of Object.entries(reasons)) {
+            const label = reasonLabels[code] || code;
+            reasonHtml += `<div style="display:flex;justify-content:space-between;padding:.3rem 0;border-bottom:1px solid var(--gov-gray-100)"><span>${label}</span><strong>${count}</strong></div>`;
+        }
+        document.getElementById('reasonBreakdown').innerHTML = reasonHtml || '<span style="color:var(--gov-gray-400)">No routing decisions yet</span>';
+
+        // Log table
+        const tbody = document.getElementById('logTableBody');
+        if (d.log && d.log.length > 0) {
+            tbody.innerHTML = d.log.map(e => {
+                const time = new Date(e.timestamp).toLocaleTimeString();
+                const modLabel = (e.module || '').replace('_', ' ');
+                const routeCls = e.route === 'cloud' ? 'cloud' : (e.reason === 'PII_DETECTED' ? 'pii' : 'local');
+                const routeIcon = e.route === 'cloud' ? '☁️' : '📱';
+                const piiTypes = e.pii_types ? JSON.parse(e.pii_types) : {};
+                const reasonShort = (e.reason || '').replace(/_/g, ' ').toLowerCase();
+                return `<tr>
+                    <td>${time}</td>
+                    <td style="text-transform:capitalize">${modLabel}</td>
+                    <td><span class="route-badge ${routeCls}">${routeIcon} ${e.route}</span></td>
+                    <td style="font-size:.72rem">${reasonShort}</td>
+                    <td>${e.tokens}</td>
+                    <td>${e.latency_ms}ms</td>
+                    <td>${e.hardware}</td>
+                </tr>`;
+            }).join('');
+        } else {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--gov-gray-400)">No activity yet</td></tr>';
+        }
+    } catch(e) {
+        console.error('Dashboard refresh failed:', e);
+    }
+}
+
+// ── Projection Calculator ────────────────────────────────
+function updateProjection() {
+    const users = parseInt(document.getElementById('calcUsers').value) || 0;
+    const tasks = parseInt(document.getElementById('calcTasks').value) || 0;
+    const costPer1k = parseFloat(document.getElementById('calcCostPer1k').value) || 0;
+    const tokensPerTask = parseInt(document.getElementById('calcTokensPerTask').value) || 0;
+
+    const dailyInferences = users * tasks;
+    const annualInferences = dailyInferences * 260; // working days
+    const annualTokens = annualInferences * tokensPerTask;
+    const annualCost = (annualTokens / 1000) * costPer1k;
+    const carbonSaved = Math.round(annualInferences * 0.0004); // ~0.4g CO2 per cloud inference saved
+
+    document.getElementById('calcSavings').textContent = '$' + Math.round(annualCost).toLocaleString();
+    document.getElementById('calcInferences').textContent = annualInferences.toLocaleString();
+    document.getElementById('calcCarbon').textContent = carbonSaved.toLocaleString();
+}
+updateProjection();
+
+// ── Utility ──────────────────────────────────────────────
+function escHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+}
+
+// ── On-Device Dictation (Whisper via backend) ────────────
+let activeRecorder = null;
+let activeStream = null;
+let activeTargetId = null;
+
+function getMicEls(targetId) {
+    // Derive prefix from targetId: counterInput -> counter, disasterText -> disaster, permitText -> permit
+    let prefix = targetId.replace('Input','').replace('Text','');
+    return {
+        btn: document.getElementById(prefix + 'MicBtn'),
+        icon: document.getElementById(prefix + 'MicIcon'),
+        label: document.getElementById(prefix + 'MicLabel'),
+        status: document.getElementById(prefix + 'MicStatus'),
+        input: document.getElementById(targetId),
+    };
+}
+
+async function toggleMic(targetId) {
+    if (activeRecorder && activeTargetId === targetId) {
+        stopRecording();
+        return;
+    }
+    if (activeRecorder) stopRecording();
+
+    const els = getMicEls(targetId);
+    if (!els.btn) return;
+
+    activeTargetId = targetId;
+    els.status.textContent = 'Requesting microphone...';
+
+    try {
+        activeStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch(e) {
+        els.status.textContent = 'Microphone access denied';
+        return;
+    }
+
+    activeRecorder = new MediaRecorder(activeStream, { mimeType: getSupportedMime() });
+    const chunks = [];
+
+    activeRecorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+
+    activeRecorder.onstop = async () => {
+        els.btn.classList.remove('recording');
+        els.icon.textContent = '🎤';
+        els.label.textContent = 'Dictate';
+        els.status.textContent = 'Transcribing on-device...';
+
+        if (activeStream) { activeStream.getTracks().forEach(t => t.stop()); activeStream = null; }
+
+        const blob = new Blob(chunks, { type: activeRecorder.mimeType });
+        activeRecorder = null;
+
+        const formData = new FormData();
+        formData.append('audio', blob, 'recording' + getExtForMime(blob.type));
+
+        try {
+            const r = await fetch('/api/transcribe', { method: 'POST', body: formData });
+            const d = await r.json();
+            if (d.error) {
+                els.status.textContent = 'Error: ' + d.error;
+                return;
+            }
+            // Append transcribed text to the input
+            const current = els.input.value;
+            els.input.value = current ? (current + ' ' + d.text) : d.text;
+            els.input.dispatchEvent(new Event('input')); // trigger PII check
+            els.status.textContent = 'On-device transcription: ' + d.latency_ms + 'ms | ' + d.duration_s + 's audio';
+        } catch(e) {
+            els.status.textContent = 'Transcription failed: ' + e.message;
+        }
+    };
+
+    activeRecorder.start();
+    els.btn.classList.add('recording');
+    els.icon.textContent = '⏹';
+    els.label.textContent = 'Stop';
+    els.status.textContent = 'Recording... click Stop when done';
+}
+
+function stopRecording() {
+    if (activeRecorder && activeRecorder.state !== 'inactive') {
+        activeRecorder.stop();
+    }
+}
+
+function getSupportedMime() {
+    const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'];
+    for (const t of types) { if (MediaRecorder.isTypeSupported(t)) return t; }
+    return '';
+}
+
+function getExtForMime(mime) {
+    if (mime.includes('webm')) return '.webm';
+    if (mime.includes('ogg')) return '.ogg';
+    if (mime.includes('mp4')) return '.mp4';
+    return '.wav';
+}
+</script>
+</body>
+</html>

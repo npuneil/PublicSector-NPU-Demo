@@ -1,0 +1,183 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║             PUBLIC SECTOR HYBRID AI — 90-SECOND EXECUTIVE DEMO            ║
+║          On-Device + Cloud powered by Intel Copilot+ PC with NPU         ║
+║          Runtime Decisioning: Privacy, Performance, Cost                  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+
+PRE-DEMO CHECKLIST  (5 mins before)
+════════════════════════════════════
+  □  App is running (StartApp.bat) and browser shows the Home tab
+  □  Green "NPU Online" dot visible in top-right corner
+  □  Wi-Fi is ON (you'll turn it off mid-demo for the wow moment)
+  □  Run one quick test in Counter Service to confirm model is hot
+  □  Have the Dashboard tab ready to switch to at the end
+  □  Optional: Azure OpenAI configured to show hybrid routing
+
+
+BEFORE YOU START – THE KEY MESSAGE
+════════════════════════════════════
+  "What if every government worker had an AI assistant that automatically
+   keeps sensitive citizen data on-device, works without internet for
+   field operations, and routes to the cloud only when it's safe and
+   beneficial — all decided at runtime by the device itself?"
+
+
+══════════════════════════════════════════════════════════════════════════════
+THE DEMO  (90 seconds)
+══════════════════════════════════════════════════════════════════════════════
+
+[0:00–0:15]  THE HOOK  ────────────────────────────────────────────────────
+
+  START ON: Home tab
+
+  SAY: "This is hybrid AI for government. On-device AI on the Intel NPU
+  for privacy and speed. Cloud AI for complex analysis. And a runtime
+  decisioning engine that automatically determines where each request
+  is processed — based on privacy, connectivity, and cost."
+
+  POINT TO: The feature cards — Privacy-First, Works Offline, Runtime
+  Decisioning
+
+
+[0:15–0:35]  PII INTERCEPTION  ────────────────────────────────────────────
+
+  CLICK: Counter Service Copilot tab
+
+  TYPE: "A citizen named John Smith at 555-123-4567 is asking about
+  their property tax bill for 142 Oak Street"
+
+  SAY: "Watch what happens. The system detects PII — a phone number
+  and an address — before the request is even processed."
+
+  POINT TO: The PII badge lighting up in the UI
+  POINT TO: When the response comes back, show "LOCAL (PII)" routing badge
+
+  SAY: "That citizen's data never left this device. The runtime engine
+  detected PII and forced local processing. No configuration needed —
+  it's automatic."
+
+
+[0:35–0:55]  OFFLINE FIELD OPERATIONS  ────────────────────────────────────
+
+  CLICK: Disaster Response tab
+
+  ACTION: TURN ON AIRPLANE MODE
+
+  CLICK: "Flood report" quick prompt
+
+  SAY: "Now I'm completely offline — airplane mode. This is a field
+  responder generating a situation brief during a flood response.
+  No cell towers, no internet."
+
+  WHEN RESULT APPEARS:
+  SAY: "Full situation briefing, action priorities, resource status —
+  generated on the Intel NPU in [X] milliseconds. This works in
+  flood zones, wildfire areas, anywhere connectivity is degraded."
+
+  POINT TO: The "LOCAL" routing badge and the latency metric
+
+
+[0:55–1:15]  HYBRID ROUTING  (if Azure OpenAI configured) ────────────────
+
+  ACTION: TURN OFF AIRPLANE MODE
+
+  CLICK: Counter Service tab
+  CLICK: "Building permit" quick prompt (no PII in this one)
+
+  SAY: "Now watch the routing change. This query has no PII, cloud
+  is available, so the runtime engine routes to Azure OpenAI for
+  deeper reasoning."
+
+  POINT TO: "CLOUD" routing badge (if cloud is configured)
+
+  SAY: "Same interface, same experience — but the decisioning engine
+  chose the best path automatically. PII stays local. Clean queries
+  can leverage the cloud."
+
+  [If cloud not configured, skip this section and go to the business case]
+
+
+[1:15–1:30]  THE BUSINESS CASE  ───────────────────────────────────────────
+
+  CLICK: Dashboard tab
+
+  POINT TO: Stats — total inferences, PII interceptions, routing split
+
+  SAY: "Every routing decision is logged — full audit trail. You can
+  see exactly how many PII interceptions happened, what stayed local,
+  what went to cloud."
+
+  SCROLL TO: Agency-Scale Projection
+
+  SAY: "Scale this to your agency. Five hundred staff, twenty-five
+  AI tasks a day — that's over three million inferences a year. At
+  cloud rates, that's significant. With the NPU, the routine work
+  costs zero. Cloud budget is reserved for complex analysis."
+
+  CLOSE WITH: "On-device for privacy and speed. Cloud when you
+  need it. Runtime decisioning to make it automatic. That's
+  hybrid AI for government on Intel."
+
+
+══════════════════════════════════════════════════════════════════════════════
+EXECUTIVE Q&A – ANTICIPATED QUESTIONS & ANSWERS
+══════════════════════════════════════════════════════════════════════════════
+
+  Q: "How does PII detection work?"
+  A: "Pattern matching runs locally before any routing decision. It
+     detects SSNs, phone numbers, email addresses, physical addresses,
+     dates of birth, case numbers, and license numbers. If any PII is
+     found, the request is forced to local processing. The system is
+     fail-closed — if it's uncertain, it defaults to local."
+
+  Q: "What about CJIS / FedRAMP compliance?"
+  A: "On-device processing means data doesn't leave the device — that
+     simplifies compliance significantly. For cloud routing, only
+     sanitized, PII-free content is sent to Azure OpenAI, which
+     supports FedRAMP and government cloud regions."
+
+  Q: "Can staff override the routing?"
+  A: "Yes. There's a 'Mark Sensitive' toggle that forces local
+     processing regardless of PII detection. And a 'Force Local' toggle
+     for full manual control. But PII detection can't be overridden —
+     if PII is found, it's always local."
+
+  Q: "What happens in disaster scenarios?"
+  A: "The Disaster Response module is always local-only by policy.
+     Summaries and metadata are queued for sync when connectivity
+     returns. No citizen data or sensitive field notes leave the device."
+
+  Q: "How accurate is the on-device model vs cloud?"
+  A: "The on-device model handles routine tasks: summarization, data
+     extraction, drafting responses, translating notes. Think of it as
+     your first-line AI for the 80% of daily tasks. Complex policy
+     analysis or cross-department coordination benefits from cloud."
+
+  Q: "What Intel hardware does this need?"
+  A: "Any Intel Core Ultra Copilot+ PC. The NPU is built into the
+     processor — no add-on needed. If you're already purchasing
+     Copilot+ PCs, the AI capability is included."
+
+  Q: "What about the audit trail?"
+  A: "Every routing decision is logged to a local SQLite database:
+     module, route (local/cloud), reason code, token count, latency.
+     No raw prompts or citizen data are stored — only metadata.
+     This supports compliance and oversight requirements."
+
+
+══════════════════════════════════════════════════════════════════════════════
+DEMO TIPS
+══════════════════════════════════════════════════════════════════════════════
+
+  • THE PII MOMENT is your opener — type a real-looking (fake) SSN
+    like 123-45-6789 and watch it intercept. Very visual.
+  • THE AIRPLANE MODE MOMENT is your closer for Disaster Response.
+  • DON'T apologize for speed — on-device inference in seconds is fast.
+  • If asked for more, show Policy Analyzer with the sample ordinance —
+    point out it catches the "[INTERNAL NOTE]" as sensitive.
+  • The Permit/Inspection sample is great for structured extraction demos.
+  • The dashboard projection calculator is interactive — let stakeholders
+    adjust numbers for their own agency scale.
+  • If cloud is not configured, focus on local-only value: privacy,
+    offline, cost, and mention cloud as "available when needed."
