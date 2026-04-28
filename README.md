@@ -1,6 +1,6 @@
-# Public Sector Hybrid AI Demo 🏛️
+# Public Sector — On-Device AI Showcase 🏛️
 
-A showcase application demonstrating hybrid on-device + cloud AI for public sector agencies, running on the Intel NPU via Microsoft Foundry Local with optional Azure OpenAI cloud integration. Runtime decisioning automatically routes requests based on privacy, connectivity, and cost.
+A showcase application demonstrating hybrid on-device + cloud AI capabilities for public sector agencies, running on the NPU (Neural Processing Unit) via Microsoft Foundry Local with optional Azure OpenAI cloud routing. Optimized for Snapdragon X (QNN runtime).
 
 ## On-Device AI Prototypes & Sample Code
 
@@ -64,67 +64,38 @@ StartApp.bat       # opens browser to http://localhost:5000
 
 ## Prerequisites
 
-- **Windows 11 Copilot+ PC** with Intel Core Ultra NPU
-- **Python 3.10+**
+- **Windows 11 Copilot+ PC** with Snapdragon X NPU
+- **Python 3.10+** (ARM64-native recommended for Snapdragon)
 - **Foundry Local** installed (`winget install Microsoft.FoundryLocal`)
-- **Azure OpenAI** (optional, for hybrid cloud features)
+- **Azure OpenAI** (optional — for hybrid cloud routing)
 
-## Hybrid Architecture
+## Snapdragon X Optimization
 
-This demo implements a **runtime decisioning engine** that evaluates each request and routes it to the optimal processing location:
-
-| Signal | Result |
-|--------|--------|
-| PII detected (SSN, phone, email, address, DOB) | → **Local only** (on-device) |
-| Content marked sensitive | → **Local only** |
-| Module policy (e.g., Disaster Response) | → **Local only** |
-| Cloud unavailable / offline | → **Local only** |
-| Large input (>3000 chars) | → **Local only** |
-| Clean query + cloud available | → **Cloud** (Azure OpenAI) |
-| Uncertain / default | → **Local only** (fail-closed) |
-
-## Intel NPU Optimization
-
-- **WMI-based silicon detection** — correctly identifies Intel Core Ultra
-- **NPU-first model chain**: phi-4-mini → phi-3.5-mini → phi-3-mini-4k → qwen2.5-1.5b
-- **Automatic warmup** on Intel (safe to pre-load, unlike QNN on Snapdragon)
+This app is optimized for ARM64 Snapdragon X devices:
+- **WMI-based silicon detection** — correctly identifies Snapdragon under x64 emulation
+- **No warmup on Snapdragon** — QNN runtime loads on first real request
+- **NPU-first model chain**: qwen2.5-1.5b → phi-3-mini-4k → phi-3.5-mini → qwen2.5-7b
 - **CPU fallback** when no NPU model is available
 
-## Modules
+## Features
 
-| Tab | Description | Routing Policy |
-|-----|-------------|---------------|
-| **Home** | Overview of hybrid AI for public sector | — |
-| **Counter Service Copilot** | Citizen inquiry handling — front desk & call center | Cloud after PII-safe check |
-| **Policy & Ordinance Analyzer** | Document analysis — summarize, extract, assess | Local-first; cloud for deep analysis |
-| **Disaster Response** | Field briefings — offline situation reports & checklists | **Always local** |
-| **Permit / Inspection** | Structured field extraction & report drafting | Local-first; cloud for analytics |
-| **Hybrid Dashboard** | Routing decisions, cost savings, PII interceptions | — |
+| Tab | Description |
+|-----|-------------|
+| **Home** | Overview of on-device AI for public sector |
+| **Counter Service Copilot** | AI-assisted citizen service counter with PII detection routing |
+| **Policy & Ordinance Analyzer** | Analyze municipal policies, bylaws, and ordinances |
+| **Disaster Response** | Emergency response planning and coordination assistant |
+| **Permit & Inspection** | Building permit and inspection workflow assistant |
+| **Hybrid Dashboard** | Live metrics showing local vs. cloud routing decisions |
 
-## Cloud Configuration (Optional)
+## Architecture
 
-```powershell
-$env:AZURE_OPENAI_ENDPOINT = "https://your-resource.openai.azure.com"
-$env:AZURE_OPENAI_KEY = "your-api-key"
-$env:AZURE_OPENAI_DEPLOYMENT = "your-deployment-name"
-```
-
-The app works fully local without cloud configuration. When Azure OpenAI is configured, the header shows "Cloud Ready" and eligible requests can route to the cloud.
+- **Privacy-first routing** — PII detection routes sensitive requests to on-device NPU
+- **Fail-closed design** — defaults to local processing when cloud is unavailable
+- **Hybrid decisioning engine** — complexity and sensitivity determine NPU vs. cloud
 
 ## Demo Experience
 
-See `START_HERE.txt` for setup instructions and `DEMO_SCRIPT.txt` for a 90-second executive demo walkthrough.
+See `START_HERE.txt` for setup instructions and `DEMO_SCRIPT.txt` for a guided demo walkthrough.
 
-**Key demo moments:**
-1. **PII Interception** — Type a phone number or SSN in Counter Service → watch it force local
-2. **Airplane Mode** — Turn off WiFi → Disaster Response still works perfectly
-3. **Hybrid Routing** — Clean query routes to cloud; sensitive query forces local
-4. **Cost Projection** — Dashboard calculator shows agency-scale savings
-
-## Privacy & Security
-
-- PII detection runs locally before any routing decision
-- Fail-closed: if uncertain, always process locally
-- No raw prompts or citizen data stored in telemetry — metadata only
-- Routing decisions logged with audit reason codes
-- Server-side enforcement — client cannot bypass PII checks
+**The key demo moment:** Show how PII-containing requests automatically stay on-device while non-sensitive complex queries route to cloud. Toggle airplane mode — everything keeps working locally.
